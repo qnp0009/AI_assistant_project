@@ -1,5 +1,5 @@
 import requests
-from milvus_utilis import search_similar_chunks
+from core.milvus_utilis import search_similar_chunks
 from config.config import LLM_API_URL, OPENAI_API_KEY
 
 def retrieve_relevant_chunks(query: str, top_k: int = 1000) -> str:

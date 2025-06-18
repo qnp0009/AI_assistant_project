@@ -1,6 +1,7 @@
 import sys
 import os
 import threading
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QPushButton,
     QFileDialog, QTextEdit, QLineEdit, QLabel

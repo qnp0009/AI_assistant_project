@@ -1,5 +1,5 @@
 from pymilvus import connections, FieldSchema, CollectionSchema, DataType, Collection
-from embedding import embed_chunks, split_into_chunks
+from core.embedding import embed_chunks, split_into_chunks
 import uuid
 import time
 
