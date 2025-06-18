@@ -6,27 +6,6 @@ from rag_chain import ask_llm_with_context
 
 router = APIRouter()
 
-@router.post("/text")
-async def embed_from_text(text: str = Form(...)):
-    chunks = split_into_chunks(text)
-    vectors = embed_chunks(chunks)
-    return {
-        "chunks": chunks,
-        "vectors": vectors
-    }
-
-@router.post("/file")
-async def embed_from_file(file: UploadFile = File(...)):
-    content = await file.read()
-    text = content.decode("utf-8")
-    chunks = split_into_chunks(text)
-    vectors = embed_chunks(chunks)
-    return {
-        "filename": file.filename,
-        "chunks": chunks,
-        "vectors": vectors
-    }
-
 @router.post("/upload_and_store")
 async def upload_and_store(file: UploadFile = File(...)):
     content = await file.read()
@@ -36,8 +15,8 @@ async def upload_and_store(file: UploadFile = File(...)):
     chunks = split_into_chunks(text)
     vectors = embed_chunks(chunks)
 
-    # Lưu vào Milvus
-    save_to_milvus(chunks, str(file.filename))
+    # Lưu vào Milvus with pre-computed vectors
+    save_to_milvus(chunks, str(file.filename), vectors)
 
     return {
         "filename": file.filename,

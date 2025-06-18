@@ -11,17 +11,17 @@ from milvus_utilis import save_to_milvus
 from embedding import split_into_chunks
 from rag_chain import ask_llm_with_context
 from api_embedding import delete_file
-
+import fitz 
 class TxtFolderWatcher(FileSystemEventHandler):
     def __init__(self, callback):
         self.callback = callback
 
     def on_modified(self, event):
-        if event.src_path.endswith(".txt"):
+        if event.src_path.endswith((".txt", ".pdf")):
             self.callback(event.src_path)
 
     def on_created(self, event):
-        if event.src_path.endswith(".txt"):
+        if event.src_path.endswith((".txt", ".pdf")):
             self.callback(event.src_path)
 
 
@@ -33,13 +33,13 @@ class AIReaderApp(QWidget):
         self.init_ui()
 
     def init_ui(self):
-        self.setWindowTitle('🧠 AI Trợ lý đọc văn bản (.txt)')
+        self.setWindowTitle('🧠 AI Trợ lý đọc văn bản (.txt, .pdf)')
         self.setGeometry(200, 200, 600, 500)
 
         layout = QVBoxLayout()
 
         # Nút chọn thư mục
-        self.folder_btn = QPushButton("📁 Chọn thư mục chứa .txt")
+        self.folder_btn = QPushButton("📁 Chọn thư mục chứa .txt, .pdf")
         self.folder_btn.clicked.connect(self.choose_folder)
         layout.addWidget(self.folder_btn)
 
@@ -69,28 +69,32 @@ class AIReaderApp(QWidget):
         if folder:
             self.watch_folder = folder
             self.folder_label.setText(f"📂 Đã chọn: {folder}")
-            self.process_txt_files(folder)
+            self.process_supported_files(folder)
             self.start_watching_folder(folder)
 
-    def process_txt_files(self, folder_path):
+    def process_supported_files(self, folder_path):
         for filename in os.listdir(folder_path):
-            if filename.endswith(".txt"):
+            if filename.endswith((".txt", ".pdf")):
                 filepath = os.path.join(folder_path, filename)
                 self.process_single_file(filepath)
-        self.result_area.setText("✅ Đã xử lý và lưu tất cả file .txt vào Milvus.")
+        self.result_area.setText("✅ Đã xử lý và lưu tất cả file .txt, .pdf vào Milvus.")
 
     def process_single_file(self, filepath):
         try:
             filename = os.path.basename(filepath)
-            # Delete old entries first
-            delete_file(filename)
-            
-            # Then process and save new content
-            with open(filepath, "r", encoding="utf-8") as f:
-                text = f.read()
-                chunks = split_into_chunks(text)
-                save_to_milvus(chunks, filename)
-                print(f"✅ Đã cập nhật: {filename}")
+            delete_file(filename)  # xóa dữ liệu cũ trong Milvus
+
+            if filepath.endswith(".txt"):
+                with open(filepath, "r", encoding="utf-8") as f:
+                    text = f.read()
+            elif filepath.endswith(".pdf"):
+                text = self.read_pdf_text(filepath)
+            else:
+                return 
+
+            chunks = split_into_chunks(text)
+            save_to_milvus(chunks, filename)
+            print(f"✅ Đã cập nhật: {filename}")
         except Exception as e:
             print(f"❌ Lỗi xử lý {filepath}: {str(e)}")
 
@@ -104,6 +108,17 @@ class AIReaderApp(QWidget):
 
         observer_thread = threading.Thread(target=self.observer.start, daemon=True)
         observer_thread.start()
+    def read_pdf_text(self, filepath):
+        text = ""
+        try:
+            doc = fitz.open(filepath)
+            for page in doc:
+                text += page.get_text()
+            doc.close()
+            print(f"✅ Đã đọc PDF thành công: {filepath}")
+        except Exception as e:
+            print(f"❌ Lỗi đọc PDF: {e}")
+        return text
 
     def ask_ai(self):
         query = self.query_input.text().strip()

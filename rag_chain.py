@@ -2,7 +2,7 @@ import requests
 from milvus_utilis import search_similar_chunks
 from config import LLM_API_URL, OPENAI_API_KEY
 
-def retrieve_relevant_chunks(query: str, top_k: int = 3) -> str:
+def retrieve_relevant_chunks(query: str, top_k: int = 1000) -> str:
     results = search_similar_chunks(query, top_k)
     return "\n".join([item["chunk"] for item in results])
 

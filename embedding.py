@@ -1,12 +1,20 @@
 from sentence_transformers import SentenceTransformer
 from typing import List
+import time
+
+print("🕒 Starting model loading...")
+start_time = time.time()
 
 # Load mô hình nhúng
 model = SentenceTransformer("all-MiniLM-L6-v2")
 
+load_time = time.time() - start_time
+print(f"✅ Model loaded in {load_time:.2f} seconds")
+
 # Cấu hình chunk
 CHUNK_SIZE = 300
 CHUNK_OVERLAP = 50
+BATCH_SIZE = 32  # Process 32 chunks at a time
 
 def split_into_chunks(text: str, size: int = CHUNK_SIZE, overlap: int = CHUNK_OVERLAP) -> List[str]:
     chunks = []
@@ -19,5 +27,15 @@ def split_into_chunks(text: str, size: int = CHUNK_SIZE, overlap: int = CHUNK_OV
     return chunks
 
 def embed_chunks(chunks: List[str]) -> List[List[float]]:
-    embeddings = model.encode(chunks, show_progress_bar=True)
-    return embeddings.tolist()
+    start_time = time.time()
+    all_embeddings = []
+    for i in range(0, len(chunks), BATCH_SIZE):
+        batch = chunks[i:i + BATCH_SIZE]
+        # Only show progress bar for large batches
+        show_progress = len(batch) > 10
+        batch_embeddings = model.encode(batch, show_progress_bar=show_progress)
+        all_embeddings.extend(batch_embeddings.tolist())
+    
+    embed_time = time.time() - start_time
+    print(f"⏱️ Embedding {len(chunks)} chunks took {embed_time:.2f} seconds")
+    return all_embeddings
