@@ -96,3 +96,14 @@ def search_similar_chunks(query: str, top_k: int = 1000):
     search_time = time.time() - start_time
     print(f"⏱️ Search completed in {search_time:.2f} seconds")
     return matches
+    
+def delete_file(filename: str):
+    collection.load()
+    collection.delete(expr=f'filename == "{filename}"')
+    collection.flush()
+    print(f"✅ Đã xóa toàn bộ chunks của {filename} khỏi Milvus.")
+
+    return {
+        "filename":filename,
+        "message": f"✅ Đã xóa toàn bộ chunks của {filename} khỏi Milvus."
+    }

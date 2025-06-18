@@ -29,7 +29,7 @@ Follow the step on google, use the powershell to run the milvus database
 
 4. Run the FastAPI server:
 ```bash
-python -m uvicorn main:app --reload
+python app_gui.py
 ```
 
 ## API Endpoints

@@ -7,10 +7,9 @@ from PyQt5.QtWidgets import (
 )
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
-from milvus_utilis import save_to_milvus 
+from milvus_utilis import save_to_milvus, delete_file
 from embedding import split_into_chunks
 from rag_chain import ask_llm_with_context
-from api_embedding import delete_file
 import fitz 
 class TxtFolderWatcher(FileSystemEventHandler):
     def __init__(self, callback):
