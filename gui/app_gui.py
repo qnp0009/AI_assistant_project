@@ -7,9 +7,9 @@ from PyQt5.QtWidgets import (
 )
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
-from milvus_utilis import save_to_milvus, delete_file
-from embedding import split_into_chunks
-from rag_chain import ask_llm_with_context
+from core.milvus_utilis import save_to_milvus, delete_file
+from core.embedding import split_into_chunks
+from core.rag_chain import ask_llm_with_context
 import fitz 
 class TxtFolderWatcher(FileSystemEventHandler):
     def __init__(self, callback):
@@ -55,6 +55,11 @@ class AIReaderApp(QWidget):
         self.ask_btn = QPushButton("🤖 Hỏi AI")
         self.ask_btn.clicked.connect(self.ask_ai)
         layout.addWidget(self.ask_btn)
+
+        # Nút xóa file
+        self.delete_btn = QPushButton("🗑️ Xóa file")
+        self.delete_btn.clicked.connect(self.delete_file)
+        layout.addWidget(self.delete_btn)
 
         # Vùng hiển thị kết quả
         self.result_area = QTextEdit()
@@ -129,6 +134,28 @@ class AIReaderApp(QWidget):
             self.result_area.setText(answer)
         except Exception as e:
             self.result_area.setText(f"❌ Lỗi khi hỏi AI: {str(e)}")
+
+    def delete_file(self):
+        if not self.watch_folder:
+            self.result_area.setText("⚠️ Vui lòng chọn thư mục trước.")
+            return
+            
+        # Get the selected file from the folder
+        file_dialog = QFileDialog()
+        file_dialog.setDirectory(self.watch_folder)
+        file_dialog.setNameFilter("Text files (*.txt);;PDF files (*.pdf)")
+        file_dialog.setFileMode(QFileDialog.ExistingFile)
+        
+        if file_dialog.exec_():
+            selected_files = file_dialog.selectedFiles()
+            if selected_files:
+                filepath = selected_files[0]
+                filename = os.path.basename(filepath)
+                try:
+                    result = delete_file(filename)
+                    self.result_area.setText(result["message"])
+                except Exception as e:
+                    self.result_area.setText(f"❌ Lỗi khi xóa file: {str(e)}")
 
 
 if __name__ == "__main__":
