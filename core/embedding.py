@@ -5,18 +5,19 @@ import time
 print("🕒 Starting model loading...")
 start_time = time.time()
 
-# Load mô hình nhúng
+# Load embedding model
 model = SentenceTransformer("all-MiniLM-L6-v2")
 
 load_time = time.time() - start_time
 print(f"✅ Model loaded in {load_time:.2f} seconds")
 
-# Cấu hình chunk
+# Chunk configuration
 CHUNK_SIZE = 300
 CHUNK_OVERLAP = 50
 BATCH_SIZE = 32  # Process 32 chunks at a time
 
 def split_into_chunks(text: str, size: int = CHUNK_SIZE, overlap: int = CHUNK_OVERLAP) -> List[str]:
+    # Split text into overlapping chunks
     chunks = []
     start = 0
     while start < len(text):

@@ -6,13 +6,13 @@ import time
 print("🕒 Connecting to Milvus...")
 start_time = time.time()
 
-# 1. Kết nối tới Milvus
+# 1. Connect to Milvus
 connections.connect(host="localhost", port="19530")
 
 connect_time = time.time() - start_time
 print(f"✅ Connected to Milvus in {connect_time:.2f} seconds")
 
-# 2. Định nghĩa schema
+# 2. Define schema
 fields = [
     FieldSchema(name="id", dtype=DataType.VARCHAR, is_primary=True, max_length=64),
     FieldSchema(name="filename", dtype=DataType.VARCHAR, max_length=200),
@@ -21,17 +21,17 @@ fields = [
 ]
 schema = CollectionSchema(fields, description="Document Chunks")
 
-# 3. Tạo hoặc lấy Collection
+# 3. Create or get Collection
 collection = Collection("documents", schema=schema)
 
-if not collection.has_index():  # Kiểm tra đã có index chưa
+if not collection.has_index():  # Check if index exists
     print("🕒 Creating index...")
     index_start = time.time()
     collection.create_index(
         field_name="embedding",
         index_params={
             "index_type": "IVF_SQ8",  # More efficient than IVF_FLAT
-            "metric_type": "IP",     # Inner Product (càng gần càng tốt)
+            "metric_type": "IP",     # Inner Product (higher is better)
             "params": {"nlist": 1024}  # Increased for better accuracy/speed balance
         }
     )
@@ -40,8 +40,7 @@ if not collection.has_index():  # Kiểm tra đã có index chưa
 
 def save_to_milvus(chunks: list[str], filename: str, vectors: list[list[float]] | None = None):
     """
-    Lưu các đoạn văn và vector tương ứng vào Milvus.
-    Mỗi đoạn có 1 id ngẫu nhiên.
+    Save text chunks and their vectors to Milvus. Each chunk gets a unique ID.
     """
     start_time = time.time()
     
@@ -52,7 +51,7 @@ def save_to_milvus(chunks: list[str], filename: str, vectors: list[list[float]] 
     # Generate unique IDs
     ids = [str(uuid.uuid4()) for _ in chunks]
 
-    # Get filename
+    # Prepare filename list
     filenames = [filename]*len(chunks)
 
     # Insert into Milvus
@@ -66,17 +65,17 @@ def save_to_milvus(chunks: list[str], filename: str, vectors: list[list[float]] 
 
 def search_similar_chunks(query: str, top_k: int = 1000):
     """
-    Nhúng câu hỏi, tìm top_k đoạn văn gần nhất trong Milvus
+    Embed the query and find the top_k most similar text chunks in Milvus.
     """
     start_time = time.time()
     
-    # Get query embedding - pass the query as a single-item list
+    # Get query embedding
     query_vectors = embed_chunks([query])
     if not query_vectors:
         raise ValueError("Failed to generate embedding for query")
     
-    query_vector = query_vectors[0]  # Get first (and only) vector
-    collection.load()  # đảm bảo dữ liệu đã sẵn sàng
+    query_vector = query_vectors[0]  # Use the first (and only) vector
+    collection.load()  # Ensure data is loaded
 
     results = collection.search(
         data=[query_vector],
@@ -98,12 +97,15 @@ def search_similar_chunks(query: str, top_k: int = 1000):
     return matches
     
 def delete_file(filename: str):
+    """
+    Delete all chunks of a file from Milvus by filename.
+    """
     collection.load()
     collection.delete(expr=f'filename == "{filename}"')
     collection.flush()
-    print(f"✅ Đã xóa toàn bộ chunks của {filename} khỏi Milvus.")
+    print(f"✅ Deleted all chunks of {filename} from Milvus.")
 
     return {
-        "filename":filename,
-        "message": f"✅ Đã xóa toàn bộ chunks của {filename} khỏi Milvus."
+        "filename": filename,
+        "message": f"✅ Deleted all chunks of {filename} from Milvus."
     }
