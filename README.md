@@ -1,12 +1,11 @@
-# Vietnamese Document Assistant
+# AI Document Assistant
 
-A powerful document processing and question-answering system built with Python, designed specifically for Vietnamese documents. The system uses Milvus vector database for efficient semantic search and OpenAI's GPT models for intelligent responses.
+A powerful document processing and question-answering system built with Python. The system uses Milvus vector database for efficient semantic search and OpenAI's GPT models for intelligent responses.
 
 ## Features
 
 - Document processing and chunking
 - Semantic search using Milvus vector database
-- Vietnamese language support
 - GUI interface for easy interaction
 - AI-powered question answering
 - Document embedding and storage
