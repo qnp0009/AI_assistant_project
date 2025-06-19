@@ -10,7 +10,7 @@ from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 from core.milvus_utilis import save_to_milvus, delete_file
 from core.embedding import split_into_chunks
-from core.rag_chain import ask_llm_with_context
+from core.rag_chain import ask_question_smart 
 import fitz 
 class TxtFolderWatcher(FileSystemEventHandler):
     def __init__(self, callback):
@@ -131,7 +131,7 @@ class AIReaderApp(QWidget):
             self.result_area.setText("⚠️ Vui lòng nhập câu hỏi.")
             return
         try:
-            answer = ask_llm_with_context(query)
+            answer = ask_question_smart(query)
             self.result_area.setText(answer)
         except Exception as e:
             self.result_area.setText(f"❌ Lỗi khi hỏi AI: {str(e)}")
